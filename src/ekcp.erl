@@ -16,7 +16,13 @@
 -export([start_listener/1]).
 
 init() ->
-    erlang:load_nif("./priv/ekcp", 0).
+    case code:priv_dir(ekcp) of
+        {'error', 'bad_name'} ->
+            erlang:load_nif("./priv/ekcp", 0);
+        Path ->
+            erlang:load_nif(filename:join([filename:dirname(Path), "priv/ekcp"]), 0)
+    end.
+
 
 -spec create(ID::integer(), Pid::pid()) -> {ok, kcp_res()}|create_err.
 create(_ID, _Pid) ->
