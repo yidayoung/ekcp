@@ -26,7 +26,7 @@
 
 -record(state, {kcp, mark, opts, ref, handle_module, last_tick}).
 
--define(INTERVAL, 20).
+-define(INTERVAL, 10).
 -define(HEART_TIME_OUT, 60).
 -define(HEART_CHECK_INTERVAL, 1000 * 10).
 
@@ -189,7 +189,7 @@ nowsec() ->
 
 %% 从udp层解包后得到的kcp包体
 do_handle_info({from_udp_msg, From, Binary}, #state{kcp = Kcp, handle_module = HandleModule} = State) ->
-    io:format("got msg from udp:~p~n", [Binary]),
+%%    io:format("got msg from udp:~p~n", [Binary]),
     ekcp:input(Kcp, Binary),
     flush(Kcp, From, HandleModule),
     {noreply, State#state{last_tick = nowsec()}};
@@ -211,13 +211,13 @@ do_handle_info(heart_check, #state{last_tick = LastTick} = State) ->
 %% 这里的Msg并不一定和ekcp:send的入参一样，如果单条消息很长，会被拆分成多个包，而一个kcp_msg只是一个包
 %% 回复的ack包也是走这条逻辑
 do_handle_info({kcp_msg, Msg}, #state{ref = Ref, mark = Mark, handle_module = HandleModule} = State) ->
-    io:format("receive kcp_msg:~p~n",[Msg]),
+%%    io:format("receive kcp_msg:~p~n",[Msg]),
     Listener = ekcp_lib:listener(Ref),
     MsgBody = HandleModule:encode_packet(Mark, Msg),
     Listener ! {send_udp_msg, Mark, MsgBody},
     {noreply, State};
 do_handle_info({send_msg, Msg}, #state{kcp = Kcp} = State) ->
-    io:format("send msg ~p~n", [Msg]),
+%%    io:format("send msg ~p~n", [Msg]),
     ekcp:send(Kcp, Msg),
     ekcp:update(Kcp, millis()),
     {noreply, State}.
@@ -227,7 +227,6 @@ rereg(Pid, Opts) ->
 
 init_state(Opts) ->
     Mark = maps:get(mark, Opts),
-    io:format("Mark:~p~n",[Mark]),
     {ok, Kcp} = ekcp:create(Mark, self()),
 
     SndWnd = maps:get(sndwnd, Opts, 32),

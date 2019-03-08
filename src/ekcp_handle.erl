@@ -23,6 +23,7 @@ reg(Ref, From, Socket, IP, InPortNo, Opts) ->
     case ekcp_lib:worker(Ref, From) of
         Worker when is_pid(Worker) ->
             ekcp_conn_srv:rereg(Worker, Opts2),
+            ets:insert(?TAB, {{connection, Ref, From}, #kcp_conn{ref = Ref, key = From, ip = IP, port = InPortNo, worker = Worker}}),
             gen_udp:send(Socket, IP, InPortNo, <<?ACT_LOGIN_AGAIN:8>>),
             {OldIP, OldPort} = ekcp_lib:get_address(Ref, From),
             gen_udp:send(Socket, OldIP, OldPort, <<?ACT_LOGIN_OTHER:8>>);
