@@ -1,5 +1,5 @@
 # 简介
-kcp的erlang实现版本，使用的erlang的nif完成，windows下的编译可能不支持。
+kcp的erlang实现版本，使用的erlang的nif完成，windows下查看windows编译方法.md。
 kcp的源地址 https://github.com/skywind3000/kcp
 关于kcp的基础部分不再做介绍，查看原地址的文档即可。
 
@@ -115,9 +115,17 @@ ekcp模块提供了KCP的基础API，大多数和KCP本身没什么区别，这�
     这并不一定能优化性能，如果一个时间片内有多次小包的发送，这样频繁的调用update反而会造成性能下降，当然也不是不允许。最好在理解update和check之间要如何配合后
     在根据自己项目的需求，进行自定义 。  
     
+    
+- ekcp:send  
+    ekcp:send 在erlang层面并没有做长度参数的设定，和c层面的不同，是直接通过传入的binary的长度决定的，但是还是要注意ikcp_send的长度使用的是int，也就是说
+    虽然binary长度没有做限制，但是这里传入的binary长度是不能超过int的最大值的，但是说回来，单条消息也不推荐太长。
+    
+- ekcp:input
+    和send类似，erlang层面都没有做长度限制，ikcp_input使用的是long来表示长度的，也就是input的binary参数长度不能超过long的限制
+    
 # 使用
 仿照ekcp_handle实现一份你自己的处理模块，注意最好套用kcp_handle行为检查，定义完成后调用start_listener就可以启动服务器监听
-
+也就是加上-behavior(kcp_handle).
 
 # 重要
 nif出错会直接导致虚拟机crash，这些内容都没有线上项目验证，如果要使用，请自己进行完整的测试！
